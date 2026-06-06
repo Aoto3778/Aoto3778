@@ -101,10 +101,11 @@
     required: $('stat-required'), requiredFoot: $('stat-required-foot'),
     monthTbody: $('month-tbody'),
     records: $('records'),
-    setTarget: $('set-target'), setStartYear: $('set-startyear'),
+    setTarget: $('set-target'), setYear: $('set-year'),
     btnExport: $('btn-export'), btnImport: $('btn-import'), importFile: $('import-file'),
     forgotBanner: $('forgot-banner'), forgotText: $('forgot-text'),
     forgotCheckout: $('forgot-checkout'), forgotEdit: $('forgot-edit'),
+    yearBanner: $('year-banner'), yearBannerText: $('year-banner-text'), yearBannerBack: $('year-banner-back'),
     appVersion: $('app-version')
   };
 
@@ -246,9 +247,11 @@
   }
 
   function buildRecords() {
-    var sessions = state.sessions.slice().sort(function (a, b) { return b.checkIn - a.checkIn; });
+    var p = period();
+    var sessions = state.sessions.filter(function (s) { return C.sessionInPeriod(s, p); })
+      .sort(function (a, b) { return b.checkIn - a.checkIn; });
     if (sessions.length === 0) {
-      el.records.innerHTML = '<div class="empty">まだ記録がありません。中央のボタンで出勤を記録しましょう。</div>';
+      el.records.innerHTML = '<div class="empty">この年度の記録はまだありません。中央のボタンで出勤を記録しましょう。</div>';
       return;
     }
     var now = Date.now();
@@ -375,12 +378,45 @@
     var p = period();
     el.periodLabel.textContent = '期間: ' + isoDate(p.startMs) + ' 〜 ' + isoDate(p.endMs);
     el.setTarget.value = C.targetHoursOf(state);
-    el.setStartYear.value = (state.settings.startYearOverride != null) ? state.settings.startYearOverride : '';
+    buildYearSelector();
     updateToggle();
     buildMonthTable();
     buildRecords();
     updateSummary();
     checkForgotBanner();
+    checkYearBanner();
+  }
+
+  // Academic-year dropdown: "auto" (rolls over each April) + any year with data.
+  function buildYearSelector() {
+    var override = state.settings.startYearOverride;
+    var years = C.availableYears(state, Date.now());
+    if (override != null && years.indexOf(override) === -1) {
+      years.push(override);
+      years.sort(function (a, b) { return a - b; });
+    }
+    var html = '<option value="auto"' + (override == null ? ' selected' : '') + '>自動（現在の年度）</option>';
+    years.forEach(function (y) {
+      var sel = (override != null && override === y) ? ' selected' : '';
+      html += '<option value="' + y + '"' + sel + '>' + y + '年度</option>';
+    });
+    el.setYear.innerHTML = html;
+  }
+
+  // Show a review-mode banner when viewing a year other than the current one.
+  function checkYearBanner() {
+    var p = period();
+    if (p.startYear !== C.currentAcademicYear(Date.now())) {
+      el.yearBannerText.textContent = p.startYear + '年度を表示中（閲覧モード）。出勤・退勤ボタンは常に現在の日時で記録されます。';
+      el.yearBanner.classList.remove('hidden');
+      el.yearBannerBack.onclick = function () {
+        state.settings.startYearOverride = null;
+        saveState();
+        fullRender();
+      };
+    } else {
+      el.yearBanner.classList.add('hidden');
+    }
   }
 
   // ---------- live tick ----------
@@ -452,9 +488,9 @@
     fullRender();
   });
 
-  el.setStartYear.addEventListener('change', function () {
-    var raw = el.setStartYear.value.trim();
-    state.settings.startYearOverride = (raw === '') ? null : Math.floor(C.num(raw));
+  el.setYear.addEventListener('change', function () {
+    var v = el.setYear.value;
+    state.settings.startYearOverride = (v === 'auto') ? null : Math.floor(C.num(v));
     saveState();
     fullRender();
   });

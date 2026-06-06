@@ -63,6 +63,33 @@
     return parts[0] + '年' + Number(parts[1]) + '月';
   }
 
+  // Academic year (Apr–Jan) that a "YYYY-MM" month belongs to.
+  function academicYearOf(mk) {
+    var p = mk.split('-');
+    var y = +p[0], m = +p[1];
+    return (m >= 4) ? y : y - 1;
+  }
+
+  // Academic year containing nowMs (Jan–Mar belong to the prior year's period).
+  function currentAcademicYear(nowMs) {
+    var d = new Date(nowMs);
+    var m = d.getMonth() + 1;
+    return (m >= 4) ? d.getFullYear() : d.getFullYear() - 1;
+  }
+
+  // Sorted list of academic years that have data, plus the current one.
+  function availableYears(state, nowMs) {
+    var set = {};
+    set[currentAcademicYear(nowMs)] = true;
+    (state.sessions || []).forEach(function (s) {
+      set[academicYearOf(monthKey(new Date(s.checkIn)))] = true;
+    });
+    Object.keys(state.manualMonths || {}).forEach(function (k) {
+      set[academicYearOf(k)] = true;
+    });
+    return Object.keys(set).map(Number).sort(function (a, b) { return a - b; });
+  }
+
   function targetHoursOf(state) {
     return num((state.settings && state.settings.targetHours)) || 450;
   }
@@ -238,6 +265,9 @@
     getPeriod: getPeriod,
     periodMonths: periodMonths,
     monthLabelJp: monthLabelJp,
+    academicYearOf: academicYearOf,
+    currentAcademicYear: currentAcademicYear,
+    availableYears: availableYears,
     targetHoursOf: targetHoursOf,
     sessionHours: sessionHours,
     sessionInPeriod: sessionInPeriod,

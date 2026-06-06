@@ -14,8 +14,20 @@
   <main class="app">
     <header class="app-header">
       <h1>研究室 滞在時間トラッカー</h1>
-      <div class="period" id="period-label">期間: —</div>
+      <div class="year-row">
+        <label class="year-select">年度
+          <select id="set-year"></select>
+        </label>
+        <span class="period" id="period-label">期間: —</span>
+      </div>
     </header>
+
+    <div class="banner info hidden" id="year-banner">
+      <span id="year-banner-text"></span>
+      <div class="banner-actions">
+        <button id="year-banner-back" class="btn small">今年度に戻る</button>
+      </div>
+    </div>
 
     <div class="banner hidden" id="forgot-banner">
       <span id="forgot-text"></span>
@@ -94,7 +106,6 @@
       <h2>設定・バックアップ</h2>
       <div class="settings-grid">
         <label>目標時間（h）<input type="number" id="set-target" min="1" step="1" /></label>
-        <label>開始年（空=自動）<input type="number" id="set-startyear" placeholder="自動" /></label>
         <div class="backup-btns">
           <button class="btn small" id="btn-export" type="button">エクスポート</button>
           <button class="btn small ghost" id="btn-import" type="button">インポート</button>

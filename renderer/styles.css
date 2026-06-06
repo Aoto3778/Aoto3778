@@ -53,6 +53,12 @@ body.bg-high { background-color: #123a1f; background-image: url("../images/bg-hi
 .app-header { text-align: center; margin-bottom: 14px; }
 .app-header h1 { margin: 0 0 4px; font-size: 1.5rem; letter-spacing: 0.02em; }
 .period { color: var(--muted); font-size: 0.85rem; }
+.year-row { display: flex; align-items: center; justify-content: center; gap: 12px; flex-wrap: wrap; margin-top: 4px; }
+.year-select { display: inline-flex; align-items: center; gap: 6px; font-size: 0.82rem; color: var(--muted); }
+.year-select select {
+  background: rgba(0, 0, 0, 0.32); border: 1px solid var(--card-border); color: var(--fg);
+  border-radius: 8px; padding: 5px 8px; font-size: 0.9rem;
+}
 
 /* Banner */
 .banner {
@@ -63,6 +69,11 @@ body.bg-high { background-color: #123a1f; background-image: url("../images/bg-hi
   padding: 10px 14px; border-radius: 12px; margin-bottom: 16px; font-size: 0.9rem;
 }
 .banner-actions { display: flex; gap: 8px; }
+.banner.info {
+  background: rgba(58, 160, 224, 0.16);
+  border-color: rgba(58, 160, 224, 0.5);
+  color: #cfe8fb;
+}
 
 /* Hero toggle */
 .hero { text-align: center; margin: 18px 0 26px; }

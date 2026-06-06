@@ -1,7 +1,7 @@
 'use strict';
 /*
- * Dev-only: launches the renderer in Electron and captures screenshots
- * in a few states. Not packaged (test/ is excluded from build.files).
+ * Dev-only: launches the renderer in Electron and captures screenshots.
+ * Not packaged (test/ is excluded from build.files).
  * Run: xvfb-run -a ./node_modules/.bin/electron test/screenshot.js
  */
 const { app, BrowserWindow } = require('electron');
@@ -16,65 +16,49 @@ const KEY = 'labTracker.v1';
 const now = Date.now();
 const HR = 3600000, DAY = 86400000;
 
-function sample(manualMonths, sessions, activeId) {
+function payload(override) {
   return JSON.stringify({
     version: 1,
-    settings: { targetHours: 450, startYearOverride: null },
-    sessions: sessions,
-    manualMonths: manualMonths,
-    activeSessionId: activeId || null,
-    appStart: now - 10 * DAY
+    settings: { targetHours: 450, startYearOverride: override },
+    sessions: [
+      // 2025年度 (Apr 2025 – Jan 2026)
+      { id: 'p1', checkIn: new Date(2025, 5, 10, 9, 0, 0).getTime(), checkOut: new Date(2025, 5, 10, 17, 0, 0).getTime() },
+      { id: 'p2', checkIn: new Date(2025, 10, 5, 10, 0, 0).getTime(), checkOut: new Date(2025, 10, 5, 15, 0, 0).getTime() },
+      // 2026年度 (current)
+      { id: 'c1', checkIn: new Date(2026, 5, 2, 10, 0, 0).getTime(), checkOut: new Date(2026, 5, 2, 16, 0, 0).getTime() },
+      { id: 'c_live', checkIn: now - 90 * 60000, checkOut: null }
+    ],
+    manualMonths: {
+      '2025-05': { hours: 50, days: 15 },
+      '2026-04': { hours: 60, days: 18 },
+      '2026-05': { hours: 55, days: 16 }
+    },
+    activeSessionId: 'c_live',
+    appStart: now - 30 * DAY
   });
 }
 
-const midData = sample(
-  { '2026-04': { hours: 40, days: 12 }, '2026-05': { hours: 42, days: 14 } },
-  [{ id: 's_a', checkIn: now - 4 * DAY + 9 * HR, checkOut: now - 4 * DAY + 12 * HR }]
-);
-const highData = sample(
-  { '2026-04': { hours: 60, days: 18 }, '2026-05': { hours: 70, days: 20 } },
-  [
-    { id: 's_x', checkIn: now - 4 * DAY + 10 * HR, checkOut: now - 4 * DAY + 15 * HR },
-    { id: 's_y', checkIn: now - 2 * DAY + 13 * HR, checkOut: now - 2 * DAY + 19 * HR },
-    { id: 's_live', checkIn: now - 2 * HR - 12 * 60000, checkOut: null }
-  ],
-  's_live'
-);
-
 function wait(ms) { return new Promise(function (r) { setTimeout(r, ms); }); }
-
 async function shoot(win, name) {
   await wait(500);
-  const img = await win.webContents.capturePage();
-  fs.writeFileSync(path.join(__dirname, name), img.toPNG());
+  fs.writeFileSync(path.join(__dirname, name), (await win.webContents.capturePage()).toPNG());
   console.log('wrote', name);
 }
-
-async function seedAndReload(win, data) {
-  await win.webContents.executeJavaScript(
-    'localStorage.setItem(' + JSON.stringify(KEY) + ', ' + JSON.stringify(data) + '); true;'
-  );
+async function seed(win, data) {
+  await win.webContents.executeJavaScript('localStorage.setItem(' + JSON.stringify(KEY) + ', ' + JSON.stringify(data) + '); true;');
   await win.loadFile(INDEX);
 }
 
 app.whenReady().then(async function () {
-  const win = new BrowserWindow({
-    width: 1000, height: 920, show: true,
-    webPreferences: { contextIsolation: true, nodeIntegration: false }
-  });
-
-  await win.loadFile(INDEX);                 // page must be loaded before touching localStorage
-  await win.webContents.executeJavaScript('localStorage.clear(); true;');
+  const win = new BrowserWindow({ width: 1000, height: 980, show: true,
+    webPreferences: { contextIsolation: true, nodeIntegration: false } });
   await win.loadFile(INDEX);
-  await shoot(win, 'shot-1-empty.png');
 
-  await seedAndReload(win, midData);
-  await shoot(win, 'shot-2-mid.png');
+  await seed(win, payload(null));   // auto → current academic year (2026)
+  await shoot(win, 'shot-year-current.png');
 
-  await seedAndReload(win, highData);
-  await shoot(win, 'shot-3-high.png');
-  await win.webContents.executeJavaScript('window.scrollTo(0, document.body.scrollHeight); true;');
-  await shoot(win, 'shot-4-high-bottom.png');
+  await seed(win, payload(2025));   // review a past academic year
+  await shoot(win, 'shot-year-past.png');
 
   console.log('done');
   setTimeout(function () { process.exit(0); }, 200);

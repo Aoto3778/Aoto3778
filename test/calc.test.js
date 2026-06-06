@@ -94,5 +94,16 @@ const liveState = {
 ok('open session ~3h counts live', near(C.cumulativeHours(liveState, now, period), 3, 0.01));
 ok('todayCheckIn returns the active session start', C.todayCheckIn(liveState, now) === now - 3 * C.MS_PER_HOUR);
 
+console.log('academic-year helpers (multi-year)');
+ok('academicYearOf 2026-05 = 2026', C.academicYearOf('2026-05') === 2026);
+ok('academicYearOf 2027-01 = 2026 (Jan belongs to prior period)', C.academicYearOf('2027-01') === 2026);
+ok('currentAcademicYear Jun 2026 = 2026', C.currentAcademicYear(new Date(2026, 5, 6).getTime()) === 2026);
+ok('currentAcademicYear Feb 2027 = 2026', C.currentAcademicYear(new Date(2027, 1, 15).getTime()) === 2026);
+ok('availableYears includes the data year 2026', C.availableYears(state, juneMs).indexOf(2026) !== -1);
+// next April auto-rolls: same state, viewed in Apr 2027, current year becomes 2027 and excludes old data
+var nextYearPeriod = C.getPeriod(new Date(2027, 3, 2, 12, 0, 0).getTime(), {});
+ok('Apr 2027 → period startYear 2027', nextYearPeriod.startYear === 2027);
+ok('2026 data excluded from 2027 period cumulative', C.cumulativeHours(state, new Date(2027, 3, 2).getTime(), nextYearPeriod) === 0);
+
 console.log('\n' + pass + ' passed, ' + fail + ' failed');
 process.exit(fail === 0 ? 0 : 1);
