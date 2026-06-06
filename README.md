@@ -1,16 +1,81 @@
-### Hi there 👋
+<div align="center">
+  <img src="build/icon.png" width="96" alt="icon" />
+  <h1>研究室 滞在時間トラッカー</h1>
+  <p>研究室の滞在時間を記録・可視化する Windows デスクトップアプリ。<br>
+  画面中央の大きなボタンを押すだけで出退勤を記録し、<b>1月末までの450時間達成</b>を支援します。</p>
+</div>
 
-<!--
-**Aoto3778/Aoto3778** is a ✨ _special_ ✨ repository because its `README.md` (this file) appears on your GitHub profile.
+---
 
-Here are some ideas to get you started:
+## 主な機能
 
-- 🔭 I’m currently working on ...
-- 🌱 I’m currently learning ...
-- 👯 I’m looking to collaborate on ...
-- 🤔 I’m looking for help with ...
-- 💬 Ask me about ...
-- 📫 How to reach me: ...
-- 😄 Pronouns: ...
-- ⚡ Fun fact: ...
--->
+- 🟢 **ワンボタン出退勤**：中央の大ボタンを押すと出勤、もう一度押すと退勤。出勤中はライブでタイマーが進みます。
+- 📊 **進捗の可視化**：累計滞在時間／1月末の予想累計／目標まで残り／必要ペース（残り月数から逆算）。
+- 🗓️ **月別の集計**：各月の累計時間・出勤日数・1日あたり平均（出勤日数で割る）。
+- ✍️ **手動入力**：過去の月や、アプリ導入前の今月分は「合計時間＋出勤日数」を手入力（導入後の自動記録と合算）。
+- 📝 **記録の編集**：出勤・退勤時刻の修正、削除に対応（退勤忘れもリカバリ可能）。
+- 💾 **バックアップ**：データはこのPC内に保存。JSONでエクスポート／インポートできます。
+- 🎭 **遊び心**：1月末の予想累計に応じて背景が3段階で変化（350h未満／350〜450h未満／450h以上）。
+
+---
+
+## インストール（研究室メンバー向け）
+
+1. このリポジトリの **[Releases](https://github.com/aoto3778/aoto3778/releases)** ページを開く。
+2. 最新版の **`LabTimeTracker-Setup-x.y.z.exe`** をダウンロード。
+3. ダウンロードした `.exe` を**実行**するだけ。スタートメニュー／デスクトップにショートカットが作成されます。
+4. 起動して中央のボタンを押せば記録開始です。
+
+> データは各PC・各個人ごとにローカル保存されます（共有はされません）。各自が自分の450時間を記録します。
+
+---
+
+## 開発・ビルド
+
+```bash
+npm install      # 依存関係（Electron / electron-builder）
+npm run icon     # build/icon.png を生成
+npm start        # アプリをローカル起動
+npm test         # 計算ロジックの単体テスト
+npm run pack     # インストーラ無しで動作確認（dist/ にアンパック）
+npm run dist     # Windows インストーラ(.exe) を生成（CIで使用）
+```
+
+### リリース（インストーラ配布）
+
+- バージョンタグを push すると、GitHub Actions（`windows-latest`）が自動でインストーラをビルドし、**GitHub Releases に `.exe` を添付**します。
+
+  ```bash
+  npm version patch      # 例: 0.1.0 -> 0.1.1（package.json更新＋タグ作成）
+  git push --follow-tags
+  ```
+
+- タグ無しで **Actions → Build Windows Installer → Run workflow** を実行すると、公開リリースを作らずに **ワークフローのアーティファクト**としてインストーラを取得できます。
+
+### 背景画像の追加
+
+`images/` に以下のファイル名で3枚を置いてからビルドしてください（詳細は [`images/README.md`](images/README.md)）。
+
+| ファイル名    | 表示条件（1月末の予想累計） |
+| ------------- | --------------------------- |
+| `bg-low.jpg`  | 350時間**未満**             |
+| `bg-mid.jpg`  | 350〜450時間**未満**        |
+| `bg-high.jpg` | 450時間**以上**             |
+
+画像が無い場合は、段階ごとに異なる背景色で動作します。
+
+---
+
+## 仕組み（集計の定義）
+
+- **集計期間**：4月1日〜翌年1月31日（10ヶ月。起動時の日付から自動判定。設定で開始年を上書き可）。
+- **予想累計**：`累計 ÷（経過日数 ÷ 全期間日数）` で現在ペースを比例延長（最初の約2週間は「暫定」表示）。
+- **必要ペース**：`(目標 − 累計) ÷ 残り月数`（残り月数＝今月〜1月）。
+- **1日あたり平均**：`月の合計時間 ÷ 出勤日数`（手動入力分も合算）。
+- 日をまたぐ滞在は1件のまま「出勤した日」に計上されます。
+
+---
+
+## 技術
+
+Electron + 素の HTML / CSS / JavaScript。データは `localStorage`。外部通信なし・オフライン動作。

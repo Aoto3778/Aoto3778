@@ -1,0 +1,55 @@
+{
+  "name": "lab-time-tracker",
+  "version": "0.1.0",
+  "description": "研究室の滞在時間を記録・可視化するデスクトップアプリ",
+  "private": true,
+  "main": "main.js",
+  "author": "aoto3778",
+  "license": "MIT",
+  "homepage": "https://github.com/aoto3778/aoto3778",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/aoto3778/aoto3778.git"
+  },
+  "scripts": {
+    "start": "electron .",
+    "icon": "node build/make-icon.js",
+    "test": "node test/calc.test.js",
+    "pack": "electron-builder --dir",
+    "dist": "electron-builder --win --publish onTagOrDraft"
+  },
+  "devDependencies": {
+    "electron": "^42.0.0",
+    "electron-builder": "^26.0.0"
+  },
+  "build": {
+    "appId": "com.aoto3778.lab-time-tracker",
+    "productName": "研究室滞在時間トラッカー",
+    "artifactName": "LabTimeTracker-Setup-${version}.${ext}",
+    "files": [
+      "main.js",
+      "preload.js",
+      "renderer/**/*",
+      "images/**/*"
+    ],
+    "win": {
+      "target": "nsis",
+      "icon": "build/icon.png"
+    },
+    "nsis": {
+      "oneClick": true,
+      "perMachine": false,
+      "createDesktopShortcut": true,
+      "createStartMenuShortcut": true,
+      "shortcutName": "研究室滞在時間トラッカー",
+      "deleteAppDataOnUninstall": false
+    },
+    "publish": [
+      {
+        "provider": "github",
+        "owner": "aoto3778",
+        "repo": "aoto3778"
+      }
+    ]
+  }
+}
