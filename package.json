@@ -48,7 +48,8 @@
       {
         "provider": "github",
         "owner": "aoto3778",
-        "repo": "aoto3778"
+        "repo": "aoto3778",
+        "releaseType": "release"
       }
     ]
   }
