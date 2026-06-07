@@ -1,7 +1,6 @@
 'use strict';
 /*
- * Dev-only: launches the renderer in Electron and captures screenshots.
- * Not packaged (test/ is excluded from build.files).
+ * Dev-only: captures clean screenshots for the user manual.
  * Run: xvfb-run -a ./node_modules/.bin/electron test/screenshot.js
  */
 const { app, BrowserWindow } = require('electron');
@@ -16,27 +15,18 @@ const KEY = 'labTracker.v1';
 const now = Date.now();
 const HR = 3600000, DAY = 86400000;
 
-function payload(override) {
-  return JSON.stringify({
-    version: 1,
-    settings: { targetHours: 450, startYearOverride: override },
-    sessions: [
-      // 2025年度 (Apr 2025 – Jan 2026)
-      { id: 'p1', checkIn: new Date(2025, 5, 10, 9, 0, 0).getTime(), checkOut: new Date(2025, 5, 10, 17, 0, 0).getTime() },
-      { id: 'p2', checkIn: new Date(2025, 10, 5, 10, 0, 0).getTime(), checkOut: new Date(2025, 10, 5, 15, 0, 0).getTime() },
-      // 2026年度 (current)
-      { id: 'c1', checkIn: new Date(2026, 5, 2, 10, 0, 0).getTime(), checkOut: new Date(2026, 5, 2, 16, 0, 0).getTime() },
-      { id: 'c_live', checkIn: now - 90 * 60000, checkOut: null }
-    ],
-    manualMonths: {
-      '2025-05': { hours: 50, days: 15 },
-      '2026-04': { hours: 60, days: 18 },
-      '2026-05': { hours: 55, days: 16 }
-    },
-    activeSessionId: 'c_live',
-    appStart: now - 30 * DAY
-  });
-}
+const working = JSON.stringify({
+  version: 1,
+  settings: { targetHours: 450, startYearOverride: null },
+  sessions: [
+    { id: 'a', checkIn: new Date(2026, 5, 2, 9, 30, 0).getTime(), checkOut: new Date(2026, 5, 2, 15, 30, 0).getTime() },
+    { id: 'b', checkIn: new Date(2026, 5, 4, 10, 0, 0).getTime(), checkOut: new Date(2026, 5, 4, 14, 0, 0).getTime() },
+    { id: 'live', checkIn: now - 47 * 60000, checkOut: null }
+  ],
+  manualMonths: { '2026-04': { hours: 40, days: 12 }, '2026-05': { hours: 38, days: 12 } },
+  activeSessionId: 'live',
+  appStart: now - 20 * DAY
+});
 
 function wait(ms) { return new Promise(function (r) { setTimeout(r, ms); }); }
 async function shoot(win, name) {
@@ -50,16 +40,15 @@ async function seed(win, data) {
 }
 
 app.whenReady().then(async function () {
-  const win = new BrowserWindow({ width: 1000, height: 980, show: true,
+  const win = new BrowserWindow({ width: 1000, height: 900, show: true,
     webPreferences: { contextIsolation: true, nodeIntegration: false } });
   await win.loadFile(INDEX);
+  await win.webContents.executeJavaScript('localStorage.clear(); true;');
+  await win.loadFile(INDEX);
+  await shoot(win, 'manual-first.png');     // first run (empty)
 
-  await seed(win, payload(null));   // auto → current academic year (2026)
-  await shoot(win, 'shot-year-current.png');
-
-  await seed(win, payload(2025));   // review a past academic year
-  await shoot(win, 'shot-year-past.png');
-
+  await seed(win, working);
+  await shoot(win, 'manual-working.png');    // typical use, checked in
   console.log('done');
   setTimeout(function () { process.exit(0); }, 200);
 }).catch(function (e) { console.error('ERR', e); setTimeout(function () { process.exit(1); }, 200); });
