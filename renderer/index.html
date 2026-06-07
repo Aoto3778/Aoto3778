@@ -1,0 +1,124 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta http-equiv="Content-Security-Policy"
+        content="default-src 'self'; img-src 'self' data:; style-src 'self' 'unsafe-inline'; script-src 'self'" />
+  <title>研究室 滞在時間トラッカー</title>
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body class="bg-low">
+  <div class="overlay"></div>
+
+  <main class="app">
+    <header class="app-header">
+      <h1>研究室 滞在時間トラッカー</h1>
+      <div class="year-row">
+        <label class="year-select">年度
+          <select id="set-year"></select>
+        </label>
+        <span class="period" id="period-label">期間: —</span>
+      </div>
+    </header>
+
+    <div class="banner info hidden" id="year-banner">
+      <span id="year-banner-text"></span>
+      <div class="banner-actions">
+        <button id="year-banner-back" class="btn small">今年度に戻る</button>
+      </div>
+    </div>
+
+    <div class="banner hidden" id="forgot-banner">
+      <span id="forgot-text"></span>
+      <div class="banner-actions">
+        <button id="forgot-checkout" class="btn small">今すぐ退勤</button>
+        <button id="forgot-edit" class="btn small ghost">記録を編集</button>
+      </div>
+    </div>
+
+    <section class="hero">
+      <button id="toggle-btn" class="toggle" type="button">
+        <span class="toggle-label" id="toggle-label">出勤</span>
+        <span class="toggle-sub" id="toggle-sub">押して開始</span>
+      </button>
+      <div class="hero-meta">
+        <div class="meta-item">
+          <span class="meta-k">本日の出勤</span>
+          <span class="meta-v" id="today-checkin">—</span>
+        </div>
+        <div class="meta-item hidden" id="live-wrap">
+          <span class="meta-k">経過</span>
+          <span class="meta-v live" id="live-timer">00:00:00</span>
+        </div>
+      </div>
+    </section>
+
+    <section class="cards">
+      <div class="card">
+        <div class="card-k">累計滞在時間</div>
+        <div class="card-v"><span id="stat-cumulative">0.0</span><small>時間</small></div>
+        <div class="progress"><div class="progress-bar" id="progress-bar"></div></div>
+        <div class="card-foot" id="stat-progress-text">目標 450時間</div>
+      </div>
+      <div class="card">
+        <div class="card-k">予想累計（1月末）<span class="chip hidden" id="provisional-chip">暫定</span></div>
+        <div class="card-v"><span id="stat-prediction">0.0</span><small>時間</small></div>
+        <div class="card-foot" id="stat-prediction-foot">現在ペースで延長</div>
+      </div>
+      <div class="card">
+        <div class="card-k">目標まで残り</div>
+        <div class="card-v"><span id="stat-remaining">450.0</span><small>時間</small></div>
+        <div class="card-foot" id="stat-remaining-foot">/ 目標 450時間</div>
+      </div>
+      <div class="card">
+        <div class="card-k">必要ペース</div>
+        <div class="card-v"><span id="stat-required">0.0</span><small>時間/月</small></div>
+        <div class="card-foot" id="stat-required-foot">残り — ヶ月</div>
+      </div>
+    </section>
+
+    <section class="panel">
+      <h2>月別の記録</h2>
+      <p class="hint">過去・現在の月は、アプリ導入<strong>前</strong>の合計時間と出勤日数を手動で入力してください（導入後は自動記録と合算されます）。</p>
+      <div class="table-wrap">
+        <table class="month-table">
+          <thead>
+            <tr>
+              <th>月</th>
+              <th class="num">累計(h)</th>
+              <th class="num">出勤日数</th>
+              <th class="num">平均(h/日)</th>
+              <th class="manual-head">手動入力：時間 / 日数</th>
+            </tr>
+          </thead>
+          <tbody id="month-tbody"></tbody>
+        </table>
+      </div>
+    </section>
+
+    <section class="panel">
+      <h2>出退勤の記録</h2>
+      <div id="records" class="records"></div>
+    </section>
+
+    <section class="panel">
+      <h2>設定・バックアップ</h2>
+      <div class="settings-grid">
+        <label>目標時間（h）<input type="number" id="set-target" min="1" step="1" /></label>
+        <div class="backup-btns">
+          <button class="btn small" id="btn-export" type="button">エクスポート</button>
+          <button class="btn small ghost" id="btn-import" type="button">インポート</button>
+          <input type="file" id="import-file" accept="application/json,.json" hidden />
+        </div>
+      </div>
+      <p class="hint">データはこのPCのアプリ内に保存されます。万一に備えて、ときどき「エクスポート」でバックアップを取ってください。</p>
+    </section>
+
+    <footer class="app-footer"><span id="app-version"></span></footer>
+  </main>
+
+  <script src="calc.js"></script>
+  <script src="app.js"></script>
+</body>
+</html>

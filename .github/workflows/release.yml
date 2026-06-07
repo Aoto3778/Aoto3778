@@ -1,0 +1,44 @@
+name: Build Windows Installer
+
+# Push a tag like v0.1.0 to build AND publish a GitHub Release with the .exe.
+# Run manually (workflow_dispatch) to build the installer as a downloadable
+# workflow artifact without creating a public release.
+on:
+  push:
+    tags:
+      - 'v*'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  build:
+    runs-on: windows-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Install dependencies
+        run: npm install
+
+      - name: Generate icon
+        run: npm run icon
+
+      - name: Build installer (and publish on tag)
+        run: npm run dist
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Upload installer as workflow artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: windows-installer
+          path: |
+            dist/*.exe
+          if-no-files-found: error
